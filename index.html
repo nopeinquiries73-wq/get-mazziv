@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mazzi Lab</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0d0916;color:#eee;font-family:Inter,system-ui,Arial}
+header{padding:18px 24px;border-bottom:1px solid #2a1d3d;background:#120d1e}
+h1{margin:0;color:#b875ff;font-size:22px}main{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 67px)}
+aside{border-right:1px solid #2a1d3d;overflow:auto;padding:14px}
+button,.upload{background:#1b1229;border:1px solid #63389a;color:#ddd;border-radius:8px;padding:9px 12px;cursor:pointer}
+.upload{display:block;text-align:center;margin-bottom:12px;color:#c98cff}
+input{width:100%;background:#120d1e;border:1px solid #332348;color:#fff;padding:9px;border-radius:8px;margin-bottom:10px}
+.file{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #20172d;border-radius:0;background:transparent;padding:9px;color:#ccc}
+.file:hover,.file.active{background:#211333;color:#d49bff}
+section{display:flex;flex-direction:column;min-width:0}
+.bar{padding:12px 18px;border-bottom:1px solid #2a1d3d;color:#bdaecc}
+pre{margin:0;padding:20px;overflow:auto;height:100%;font:13px/1.6 Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+#empty{padding:40px;color:#887d94}
+.badge{float:right;color:#8e6aa8}
+</style>
+</head>
+<body>
+<header><h1>Mazzi Lab <span class="badge">Code Viewer</span></h1></header>
+<main>
+<aside>
+<label class="upload" for="pick">Open folder / files</label>
+<input id="pick" type="file" multiple webkitdirectory directory>
+<input id="search" placeholder="Search files...">
+<div id="files"></div>
+</aside>
+<section>
+<div class="bar" id="title">Select a file</div>
+<pre id="code"><span id="empty">Choose files or a folder to view its contents.</span></pre>
+</section>
+</main>
+<script>
+const pick=document.getElementById('pick'), list=document.getElementById('files');
+const search=document.getElementById('search'), code=document.getElementById('code'), title=document.getElementById('title');
+let files=[];
+const textExt=/\.(txt|log|json|xml|html?|css|js|ts|jsx|tsx|py|ps1|bat|cmd|c|cc|cpp|h|hpp|cs|java|php|rb|go|rs|sql|ya?ml|ini|cfg|md|lua|toml|sh)$/i;
+
+pick.onchange=()=>{files=[...pick.files].sort((a,b)=>(a.webkitRelativePath||a.name).localeCompare(b.webkitRelativePath||b.name));render()};
+search.oninput=render;
+
+function render(){
+ list.innerHTML='';
+ const q=search.value.toLowerCase();
+ files.filter(f=>(f.webkitRelativePath||f.name).toLowerCase().includes(q)).forEach(f=>{
+   const b=document.createElement('button'); b.className='file';
+   b.textContent=f.webkitRelativePath||f.name;
+   b.onclick=()=>openFile(f,b); list.appendChild(b);
+ });
+}
+async function openFile(f,b){
+ document.querySelectorAll('.file').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+ title.textContent=f.webkitRelativePath||f.name;
+ if(!textExt.test(f.name)){code.textContent='Binary / unsupported preview\\n\\nSize: '+f.size.toLocaleString()+' bytes';return}
+ const text=await f.text();
+ code.textContent=text;
+}
+</script>
+</body>
+</html>
